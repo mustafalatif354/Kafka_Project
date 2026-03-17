@@ -5,11 +5,15 @@ import json
 app = FastAPI()
 
 producer = KafkaProducer(
-    bootstrap_servers = "localhost:9092",
-    value_serializer = lambda v: json.dumps(v).encode("utf-8")
+    bootstrap_servers="kafka:9092",
+    value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
-@app.post("/orders")
+@app.get("/")
+def root():
+    return {"status": "running"}
+
+@app.post("/order")
 def create_order(order_id: int, amount: int):
 
     event = {
@@ -19,4 +23,4 @@ def create_order(order_id: int, amount: int):
 
     producer.send("orders", event)
 
-    return {"status": "sent"}
+    return {"status": "sent", "data": event}

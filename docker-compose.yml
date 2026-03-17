@@ -1,5 +1,3 @@
-version: "3"
-
 services:
 
   zookeeper:
@@ -18,14 +16,37 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    
+
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
+    image: provectuslabs/kafka-ui
     ports:
       - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     depends_on:
-      - kafka  
+      - kafka
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: orders
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  producer:
+    build: ./producer-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - kafka
+
+  consumer:
+    build: ./consumer
+    depends_on:
+      - kafka
+      - postgres
